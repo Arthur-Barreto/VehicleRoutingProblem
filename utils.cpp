@@ -90,27 +90,18 @@ void read_graph(string filename, vector<tuple<int, int, int>> *edges, map<int, i
 
 void generate_matrix(const std::vector<std::tuple<int, int, int>> &edges, std::vector<std::vector<int>> &matrix) {
 
-    cout << "Generating matrix" << endl;
-
     int n = matrix.size();
-
-    cout << "Matrix size: " << n << endl;
 
     // Initialize the matrix with -1
     for (int i = 0; i < n; i++) {
         matrix[i].resize(n, -1);
     }
 
-    cout << "Matrix initialized" << endl;
-
     // Fill the matrix using the edges information
     for (const auto &edge : edges) {
-        cout << "Edge: " << get<0>(edge) << " " << get<1>(edge) << " " << get<2>(edge) << endl;
         int u = std::get<0>(edge);
         int v = std::get<1>(edge);
         int w = std::get<2>(edge);
         matrix[u][v] = w;
     }
-
-    cout << "Matrix filled" << endl;
 }

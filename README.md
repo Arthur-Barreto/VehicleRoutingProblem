@@ -7,7 +7,7 @@ Vehicle Routing Problem - Supercomputing Final Project
 criando utils
 
 ```bash
-g++ utils.o -c utils.cpp
+g++ -c utils.cpp
 ```
 
 linkando com a main e compilando

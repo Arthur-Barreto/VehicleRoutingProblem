@@ -40,36 +40,40 @@ vector<int> get_permutations(int n, int index) {
     return permutation;
 }
 
-vector<vector<int>> valid_paths(vector<vector<int>> &paths, vector<vector<int>> &matrix, int &total_capacity, map<int, int> &node_order) {
-
+vector<vector<int>> valid_paths(vector<vector<int>> &paths, vector<vector<int>> &matrix, int total_capacity, map<int, int> &node_order) {
     vector<vector<int>> possible_paths;
+    int n = paths.size();
 
-    int total_capacity_used = 0;
-
-    for (int i = 0; i < paths.size(); i++) {
-        vector<int> path = paths[i];
+    for (int i = 0; i < n; i++) {
         vector<int> new_path;
-        new_path.push_back(0); // Add the starting node (0) to the new path
-        for (int j = 0; j < path.size() - 1; j++) {
-            int node = path[j];
-            int next_node = path[j + 1];
-            if (matrix[node][next_node] == -1) {
-                new_path.push_back(0);
-                new_path.push_back(next_node);
-                total_capacity_used = 0;
-            } else {
+        new_path.push_back(0); // Start with depot (0)
+        int total_capacity_used = 0;
+
+        for (int j = 0; j < paths[i].size() - 1; j++) {
+            int node = paths[i][j];
+            int next_node = paths[i][j + 1];
+
+            if (matrix[node][next_node] != -1 && total_capacity_used + node_order[next_node] <= total_capacity) {
                 new_path.push_back(next_node);
                 total_capacity_used += node_order[next_node];
-                if (total_capacity_used > total_capacity) {
-                    new_path.push_back(0);
+            } else {
+                if (new_path.back() != 0) { // Prevent consecutive zeros
+                    new_path.push_back(0); // Return to depot to reset capacity
+                }
+                total_capacity_used = 0; // Reset capacity after returning to depot
+
+                if (matrix[0][next_node] != -1) { // If there is a path from depot to next_node
                     new_path.push_back(next_node);
-                    total_capacity_used = node_order[next_node];
+                    total_capacity_used += node_order[next_node];
                 }
             }
         }
-        if (total_capacity_used <= total_capacity) {
-            possible_paths.push_back(new_path);
+
+        if (new_path.back() != 0) { // Avoid appending 0 if already at depot
+            new_path.push_back(0);
         }
+
+        possible_paths.push_back(new_path);
     }
 
     return possible_paths;
@@ -103,7 +107,7 @@ int main() {
     vector<Edge> edges;
     map<int, int> node_order;
 
-    read_graph("grafo.txt", &edges, &node_order);
+    read_graph("grafo3.txt", &edges, &node_order);
 
     cout << "Number of edges: " << edges.size() << endl;
     cout << "Number of nodes: " << node_order.size() + 1 << endl;

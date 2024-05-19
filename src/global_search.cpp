@@ -1,14 +1,15 @@
 #include "utils.h"
 using namespace std;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
 
-    if (argc != 2) {
-        cout << "Usage: " << argv[0] << " <graph_file>" << endl;
+    if (argc != 3) {
+        cout << "Usage: " << argv[0] << " <graph_file> <capacity>" << endl;
         return 1;
     }
 
     string graph_file = argv[1];
+    int capacity = atoi(argv[2]);
 
     vector<Edge> edges;
     map<int, int> node_order;
@@ -30,7 +31,6 @@ int main(int argc, char* argv[]) {
     //     cout << "\n";
     // }
 
-    int capacity = 15;
     vector<vector<int>> routes;
 
     int total_permutations = factorial(num_nodes - 1);

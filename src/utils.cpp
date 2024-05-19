@@ -301,3 +301,53 @@ vector<int> best_path_parallel(vector<vector<int>> &matrix, vector<vector<int>> 
 
     return best_path;
 }
+
+vector<int> best_path_heuristic(vector<vector<int>> &matrix, vector<vector<int>> &paths) {
+
+    vector<int> best_path;
+    int best_cost = INT_MAX;
+
+    // Sort the paths based on a heuristic
+    sort(paths.begin(), paths.end(), [&](const vector<int>& path1, const vector<int>& path2) {
+        // Calculate the cost of each path
+        int cost1 = 0;
+        for (int j = 0; j < path1.size() - 1; j++) {
+            int node = path1[j];
+            int next_node = path1[j + 1];
+            cost1 += matrix[node][next_node];
+        }
+
+        int cost2 = 0;
+        for (int j = 0; j < path2.size() - 1; j++) {
+            int node = path2[j];
+            int next_node = path2[j + 1];
+            cost2 += matrix[node][next_node];
+        }
+
+        // Sort in ascending order of cost
+        return cost1 < cost2;
+    });
+
+    // Determine the number of paths to consider
+    int num_paths = paths.size();
+    int num_paths_to_consider = num_paths * 0.1; // 10% of total paths
+
+    // Iterate over the paths up to the specified number
+    for (int i = 0; i < num_paths_to_consider; i++) {
+        vector<int> path = paths[i];
+        int cost = 0;
+        for (int j = 0; j < path.size() - 1; j++) {
+            int node = path[j];
+            int next_node = path[j + 1];
+            cost += matrix[node][next_node];
+        }
+
+        // Update the best path if the cost is lower
+        if (cost < best_cost) {
+            best_cost = cost;
+            best_path = path;
+        }
+    }
+
+    return best_path;
+}

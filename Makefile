@@ -10,7 +10,7 @@ SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 # Targets
-TARGETS = global_search parallel_search
+TARGETS = global_search parallel_search heuristic_search
 
 # Default target
 all: $(TARGETS)
@@ -25,6 +25,10 @@ global_search: $(OBJ_DIR)/global_search.o $(OBJ_DIR)/utils.o
 
 # Compile parallel_search with OpenMP
 parallel_search: $(OBJ_DIR)/parallel_search.o $(OBJ_DIR)/utils.o
+	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $^ -o $@
+
+# Compile heuristic_search with OpenMP
+heuristic_search: $(OBJ_DIR)/heuristic_search.o $(OBJ_DIR)/utils.o
 	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $^ -o $@
 
 # Compile object files

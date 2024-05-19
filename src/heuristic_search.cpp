@@ -35,14 +35,10 @@ int main(int argc, char *argv[]) {
 
     int total_permutations = factorial(num_nodes - 1);
 
-#pragma omp parallel for
     for (int i = 1; i <= total_permutations; i++) {
-        vector<int> paths = get_permutations_parallel(num_nodes - 1, i);
+        vector<int> paths = get_permutations(num_nodes - 1, i);
         {
-#pragma omp critical
-            {
-                routes.push_back(paths);
-            }
+            routes.push_back(paths);
         }
     }
 
@@ -55,7 +51,7 @@ int main(int argc, char *argv[]) {
     //     cout << endl;
     // }
 
-    vector<vector<int>> valid_routes = valid_paths_parallel(routes, matrix, capacity, node_order);
+    vector<vector<int>> valid_routes = valid_paths(routes, matrix, capacity, node_order);
 
     // print the valid routes
     // for (int i = 0; i < valid_routes.size(); i++) {
@@ -67,7 +63,7 @@ int main(int argc, char *argv[]) {
     // }
 
     // get the best path
-    vector<int> best_route = best_path_parallel(matrix, valid_routes);
+    vector<int> best_route = best_path_heuristic(matrix, valid_routes);
 
     // print the best route
     cout << "Best Route: ";

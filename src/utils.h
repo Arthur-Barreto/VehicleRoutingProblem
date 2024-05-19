@@ -27,4 +27,5 @@ std::vector<int> best_path(std::vector<std::vector<int>> &matrix, std::vector<st
 std::vector<int> get_permutations_parallel(int n, int index);
 std::vector<std::vector<int>> valid_paths_parallel(std::vector<std::vector<int>> &paths, std::vector<std::vector<int>> &matrix, int total_capacity, std::map<int, int> &node_order);
 std::vector<int> best_path_parallel(std::vector<std::vector<int>> &matrix, std::vector<std::vector<int>> &paths);
+std::vector<int> best_path_heuristic(std::vector<std::vector<int>> &matrix, std::vector<std::vector<int>> &paths);
 #endif // UTILS_H

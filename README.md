@@ -2,18 +2,22 @@
 
 Vehicle Routing Problem - Supercomputing Final Project
 
-## Para compilar
-
-### Global Search
-
-1. De a permição de execução para o arquivo `compile_global.sh`com o comando:
+## To compile the code
 
 ```bash
-chmod +x compile_global.sh
+make
 ```
 
-Execute o arquivo `compile_global.sh` com o comando:
+## To run the code
 
 ```bash
-./compile_global.sh
+./global_search input_files/grafo10.txt
 ```
+
+or
+
+```bash
+./parallel_search input_files/grafo10.txt
+```
+
+or go to `src/time_compare.ipynb` and run the cells to compare the time of the two algorithms.

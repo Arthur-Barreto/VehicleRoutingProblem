@@ -23,12 +23,12 @@ int main(int argc, char* argv[]) {
 
     generate_matrix(edges, matrix);
 
-    for (int i = 0; i < num_nodes; i++) {
-        for (int j = 0; j < num_nodes; j++) {
-            cout << matrix[i][j] << " ";
-        }
-        cout << "\n";
-    }
+    // for (int i = 0; i < num_nodes; i++) {
+    //     for (int j = 0; j < num_nodes; j++) {
+    //         cout << matrix[i][j] << " ";
+    //     }
+    //     cout << "\n";
+    // }
 
     int capacity = 15;
     vector<vector<int>> routes;
@@ -43,24 +43,24 @@ int main(int argc, char* argv[]) {
     }
 
     // print the routes
-    for (int i = 0; i < routes.size(); i++) {
-        cout << "Route " << i << ": ";
-        for (int j = 0; j < routes[i].size(); j++) {
-            cout << routes[i][j] << " ";
-        }
-        cout << endl;
-    }
+    // for (int i = 0; i < routes.size(); i++) {
+    //     cout << "Route " << i << ": ";
+    //     for (int j = 0; j < routes[i].size(); j++) {
+    //         cout << routes[i][j] << " ";
+    //     }
+    //     cout << endl;
+    // }
 
     vector<vector<int>> valid_routes = valid_paths(routes, matrix, capacity, node_order);
 
     // print the valid routes
-    for (int i = 0; i < valid_routes.size(); i++) {
-        cout << "Valid Route " << i << ": ";
-        for (int j = 0; j < valid_routes[i].size(); j++) {
-            cout << valid_routes[i][j] << " ";
-        }
-        cout << endl;
-    }
+    // for (int i = 0; i < valid_routes.size(); i++) {
+    //     cout << "Valid Route " << i << ": ";
+    //     for (int j = 0; j < valid_routes[i].size(); j++) {
+    //         cout << valid_routes[i][j] << " ";
+    //     }
+    //     cout << endl;
+    // }
 
     // get the best path
     vector<int> best_route = best_path(matrix, valid_routes);

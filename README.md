@@ -4,14 +4,16 @@ Vehicle Routing Problem - Supercomputing Final Project
 
 ## Para compilar
 
-criando utils
+### Global Search
+
+1. De a permição de execução para o arquivo `compile_global.sh`com o comando:
 
 ```bash
-g++ -c utils.cpp
+chmod +x compile_global.sh
 ```
 
-linkando com a main e compilando
+Execute o arquivo `compile_global.sh` com o comando:
 
 ```bash
-g++ -fopenmp global_search.cpp utils.o -o global_search
+./compile_global.sh
 ```

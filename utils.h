@@ -24,4 +24,7 @@ int factorial(int n);
 std::vector<int> get_permutations(int n, int index);
 std::vector<std::vector<int>> valid_paths(std::vector<std::vector<int>> &paths, std::vector<std::vector<int>> &matrix, int total_capacity, std::map<int, int> &node_order);
 std::vector<int> best_path(std::vector<std::vector<int>> &matrix, std::vector<std::vector<int>> &paths);
+std::vector<int> get_permutations_parallel(int n, int index);
+std::vector<std::vector<int>> valid_paths_parallel(std::vector<std::vector<int>> &paths, std::vector<std::vector<int>> &matrix, int total_capacity, std::map<int, int> &node_order);
+std::vector<int> best_path_parallel(std::vector<std::vector<int>> &matrix, std::vector<std::vector<int>> &paths);
 #endif // UTILS_H

@@ -67,14 +67,14 @@ int main(int argc, char *argv[]) {
 
     // print the best route
     cout << "Best Route: ";
-    for (int i = 0; i < best_route.size(); i++) {
+    for (std::vector<int>::size_type i = 0; i < best_route.size(); i++) {
         cout << best_route[i] << " ";
     }
     cout << endl;
 
     // compute the cost from the best route
     int cost = 0;
-    for (int i = 0; i < best_route.size() - 1; i++) {
+    for (std::vector<int>::size_type i = 0; i < best_route.size() - 1; i++) {
         int node = best_route[i];
         int next_node = best_route[i + 1];
         cost += matrix[node][next_node];

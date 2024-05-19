@@ -146,7 +146,7 @@ vector<vector<int>> valid_paths(vector<vector<int>> &paths, vector<vector<int>> 
         new_path.push_back(0); // Start with depot (0)
         int total_capacity_used = 0;
 
-        for (int j = 0; j < paths[i].size() - 1; j++) {
+        for (std::vector<int>::size_type j = 0; j < paths[i].size() - 1; j++) {
             int node = paths[i][j];
             int next_node = paths[i][j + 1];
 
@@ -181,10 +181,10 @@ vector<int> best_path(vector<vector<int>> &matrix, vector<vector<int>> &paths) {
     vector<int> best_path;
     int best_cost = INT_MAX;
 
-    for (int i = 0; i < paths.size(); i++) {
+    for (std::vector<int>::size_type i = 0; i < paths.size(); i++) {
         vector<int> path = paths[i];
         int cost = 0;
-        for (int j = 0; j < path.size() - 1; j++) {
+        for (std::vector<int>::size_type j = 0; j < path.size() - 1; j++) {
             int node = path[j];
             int next_node = path[j + 1];
             cost += matrix[node][next_node];
@@ -239,7 +239,7 @@ vector<vector<int>> valid_paths_parallel(vector<vector<int>> &paths, vector<vect
         new_path.push_back(0); // Start with depot (0)
         int total_capacity_used = 0;
 
-        for (int j = 0; j < paths[i].size() - 1; j++) {
+        for (std::vector<int>::size_type j = 0; j < paths[i].size() - 1; j++) {
             int node = paths[i][j];
             int next_node = paths[i][j + 1];
 
@@ -282,10 +282,10 @@ vector<int> best_path_parallel(vector<vector<int>> &matrix, vector<vector<int>> 
     int best_cost = INT_MAX;
 
 #pragma omp parallel for
-    for (int i = 0; i < paths.size(); i++) {
+    for (std::vector<int>::size_type i = 0; i < paths.size(); i++) {
         vector<int> path = paths[i];
         int cost = 0;
-        for (int j = 0; j < path.size() - 1; j++) {
+        for (std::vector<int>::size_type j = 0; j < path.size() - 1; j++) {
             int node = path[j];
             int next_node = path[j + 1];
             cost += matrix[node][next_node];
@@ -302,23 +302,69 @@ vector<int> best_path_parallel(vector<vector<int>> &matrix, vector<vector<int>> 
     return best_path;
 }
 
+vector<vector<int>> valid_paths_heurist(vector<vector<int>> &paths, vector<vector<int>> &matrix, int total_capacity, map<int, int> &node_order) {
+    vector<vector<int>> possible_paths;
+
+    // Shuffle the paths randomly
+    random_shuffle(paths.begin(), paths.end());
+
+    // Determine the number of paths to consider (half of the total paths)
+    int num_paths = paths.size();
+    int num_paths_to_consider = max(1, min(num_paths, static_cast<int>(num_paths * 0.2))); // 20% of total paths or 1 if less than 5% of total paths
+
+    for (int i = 0; i < num_paths_to_consider; i++) {
+        const auto &path = paths[i];
+        vector<int> new_path;
+        new_path.push_back(0); // Start with depot (0)
+        int total_capacity_used = 0;
+
+        for (std::vector<int>::size_type j = 0; j < path.size() - 1; j++) {
+            int node = path[j];
+            int next_node = path[j + 1];
+
+            if (matrix[node][next_node] != -1 && total_capacity_used + node_order[next_node] <= total_capacity) {
+                new_path.push_back(next_node);
+                total_capacity_used += node_order[next_node];
+            } else {
+                if (new_path.back() != 0) { // Prevent consecutive zeros
+                    new_path.push_back(0);  // Return to depot to reset capacity
+                }
+                total_capacity_used = 0; // Reset capacity after returning to depot
+
+                if (matrix[0][next_node] != -1) { // If there is a path from depot to next_node
+                    new_path.push_back(next_node);
+                    total_capacity_used += node_order[next_node];
+                }
+            }
+        }
+
+        if (new_path.back() != 0) { // Avoid appending 0 if already at depot
+            new_path.push_back(0);
+        }
+
+        possible_paths.push_back(new_path);
+    }
+
+    return possible_paths;
+}
+
 vector<int> best_path_heuristic(vector<vector<int>> &matrix, vector<vector<int>> &paths) {
 
     vector<int> best_path;
     int best_cost = INT_MAX;
 
     // Sort the paths based on a heuristic
-    sort(paths.begin(), paths.end(), [&](const vector<int>& path1, const vector<int>& path2) {
+    sort(paths.begin(), paths.end(), [&](const vector<int> &path1, const vector<int> &path2) {
         // Calculate the cost of each path
         int cost1 = 0;
-        for (int j = 0; j < path1.size() - 1; j++) {
+        for (std::vector<int>::size_type j = 0; j < path1.size() - 1; j++) {
             int node = path1[j];
             int next_node = path1[j + 1];
             cost1 += matrix[node][next_node];
         }
 
         int cost2 = 0;
-        for (int j = 0; j < path2.size() - 1; j++) {
+        for (std::vector<int>::size_type j = 0; j < path2.size() - 1; j++) {
             int node = path2[j];
             int next_node = path2[j + 1];
             cost2 += matrix[node][next_node];
@@ -330,13 +376,13 @@ vector<int> best_path_heuristic(vector<vector<int>> &matrix, vector<vector<int>>
 
     // Determine the number of paths to consider
     int num_paths = paths.size();
-    int num_paths_to_consider = num_paths * 0.1; // 10% of total paths
+    int num_paths_to_consider = max(1, min(num_paths, static_cast<int>(num_paths * 0.05))); // 5% of total paths or 1 if less than 5% of total paths
 
     // Iterate over the paths up to the specified number
     for (int i = 0; i < num_paths_to_consider; i++) {
         vector<int> path = paths[i];
         int cost = 0;
-        for (int j = 0; j < path.size() - 1; j++) {
+        for (std::vector<int>::size_type j = 0; j < path.size() - 1; j++) {
             int node = path[j];
             int next_node = path[j + 1];
             cost += matrix[node][next_node];

@@ -3,16 +3,11 @@
 
 #include <algorithm>
 #include <climits>
-#include <fstream>
+#include <cmath>
 #include <iostream>
-#include <iterator> // For advance
 #include <map>
-#include <omp.h>
-#include <sstream> // For stringstream parsing
-#include <stack>
-#include <string>
+// #include <mpi.h>
 #include <tuple>
-#include <unordered_map>
 #include <vector>
 
 typedef std::tuple<int, int, int> Edge; // Define a type alias for the edge tuple

@@ -136,11 +136,31 @@ int main(int argc, char *argv[]) {
     MPI_Allgatherv(local_permutations_flat.data(), local_size, MPI_INT,
                    all_permutations.data(), recv_counts.data(), displs.data(), MPI_INT, MPI_COMM_WORLD);
 
-    vector<vector<int>> all_permutations_2d(total_permutations, vector<int>(num_nodes));
+    // print all permutations
+    if (rank == 0) {
+        cout << "All Permutations: ";
+        for (int i = 0; i < all_permutations.size(); i++) {
+            cout << all_permutations[i] << " ";
+        }
+        cout << endl;
+    }
+
+    vector<vector<int>> all_permutations_2d(total_permutations, vector<int>(local_permutations[0].size()));
     int offset = 0;
     for (int i = 0; i < total_permutations; ++i) {
-        copy(all_permutations.begin() + offset, all_permutations.begin() + offset + num_nodes, all_permutations_2d[i].begin());
-        offset += num_nodes;
+        copy(all_permutations.begin() + offset, all_permutations.begin() + offset + local_permutations[0].size(), all_permutations_2d[i].begin());
+        offset += local_permutations[0].size();
+    }
+
+    // print all permutations
+    if (rank == 0) {
+        for (int i = 0; i < all_permutations_2d.size(); i++) {
+            cout << "Permutation " << i << ": ";
+            for (int j = 0; j < all_permutations_2d[i].size(); j++) {
+                cout << all_permutations_2d[i][j] << " ";
+            }
+            cout << endl;
+        }
     }
 
     vector<vector<int>> valid_routes;

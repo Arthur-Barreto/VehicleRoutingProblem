@@ -87,32 +87,60 @@ int main(int argc, char *argv[]) {
         local_permutations.push_back(get_permutations(num_nodes - 1, i));
     }
 
-    // Gather all permutations to rank 0
-    int local_size = local_permutations.size();
-    vector<int> recv_counts(size);
-    MPI_Gather(&local_size, 1, MPI_INT, recv_counts.data(), 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-    vector<int> displs(size, 0);
-    if (rank == 0) {
-        for (int i = 1; i < size; i++) {
-            displs[i] = displs[i - 1] + recv_counts[i - 1];
+    // print the local permutations
+    for (int i = 0; i < local_permutations.size(); i++) {
+        cout << "Rank " << rank << " Permutation " << i << ": ";
+        for (int j = 0; j < local_permutations[i].size(); j++) {
+            cout << local_permutations[i][j] << " ";
         }
+        cout << endl;
     }
 
-    vector<int> all_permutations(total_permutations * num_nodes);
+    // Flatten local permutations
     vector<int> local_permutations_flat;
     for (const auto &perm : local_permutations) {
         local_permutations_flat.insert(local_permutations_flat.end(), perm.begin(), perm.end());
     }
 
-    MPI_Gatherv(local_permutations_flat.data(), local_size * num_nodes, MPI_INT,
-                all_permutations.data(), recv_counts.data(), displs.data(), MPI_INT, 0, MPI_COMM_WORLD);
+    // Prepare to gather all permutations
+    int local_size = local_permutations_flat.size();
+    vector<int> recv_counts(size);
+    MPI_Allgather(&local_size, 1, MPI_INT, recv_counts.data(), 1, MPI_INT, MPI_COMM_WORLD);
+
+    // print all recv_counts
+    if (rank == 0) {
+        cout << "Recv counts: ";
+        for (int i = 0; i < size; i++) {
+            cout << recv_counts[i] << " ";
+        }
+        cout << endl;
+    }
+
+    vector<int> displs(size, 0);
+    int total_size = recv_counts[0];
+    for (int i = 1; i < size; i++) {
+        displs[i] = displs[i - 1] + recv_counts[i - 1];
+        total_size += recv_counts[i];
+    }
+
+    // print all displs
+    if (rank == 0) {
+        cout << "Displs: ";
+        for (int i = 0; i < size; i++) {
+            cout << displs[i] << " ";
+        }
+        cout << endl;
+    }
+
+    vector<int> all_permutations(total_size);
+    MPI_Allgatherv(local_permutations_flat.data(), local_size, MPI_INT,
+                   all_permutations.data(), recv_counts.data(), displs.data(), MPI_INT, MPI_COMM_WORLD);
 
     vector<vector<int>> all_permutations_2d(total_permutations, vector<int>(num_nodes));
-    if (rank == 0) {
-        for (int i = 0; i < total_permutations; ++i) {
-            copy(all_permutations.begin() + i * num_nodes, all_permutations.begin() + (i + 1) * num_nodes, all_permutations_2d[i].begin());
-        }
+    int offset = 0;
+    for (int i = 0; i < total_permutations; ++i) {
+        copy(all_permutations.begin() + offset, all_permutations.begin() + offset + num_nodes, all_permutations_2d[i].begin());
+        offset += num_nodes;
     }
 
     vector<vector<int>> valid_routes;
@@ -150,10 +178,13 @@ int main(int argc, char *argv[]) {
 
     MPI_Finalize();
 
-    // STOP THE CHRONOS CLOCK
+    // STOP THE CHONOS CLOCK
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-    cout << "Time taken: " << duration.count() << " milliseconds" << endl;
+    
+    if (rank == 0) {
+        cout << "Time taken: " << duration.count() << " milliseconds" << endl;
+    }
 
     return 0;
 }

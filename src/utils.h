@@ -4,9 +4,11 @@
 #include <algorithm>
 #include <climits>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <map>
-// #include <mpi.h>
+#include <omp.h>
+#include <sstream>
 #include <tuple>
 #include <vector>
 

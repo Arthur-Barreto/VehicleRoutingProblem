@@ -3,6 +3,7 @@ using namespace std;
 
 // Function to read the graph from a file
 void read_graph(string filename, vector<tuple<int, int, int>> *edges, map<int, int> *node_order) {
+
     ifstream file(filename);
 
     if (!file.is_open()) {

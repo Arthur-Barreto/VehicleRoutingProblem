@@ -1,10 +1,34 @@
-#include "utils.h"
+#include <algorithm>
+#include <chrono>
+#include <climits>
+#include <cmath>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <mpi.h>
+#include <sstream>
+#include <tuple>
+#include <vector>
+
 using namespace std;
+
+typedef tuple<int, int, int> Edge; // Define a type alias for the edge tuple
 
 // Helper function to distribute tasks
 void distribute_tasks(int num_tasks, int num_procs, int rank, int &start_task, int &end_task);
+void read_graph(string filename, vector<Edge> *edges, map<int, int> *node_order);
+void generate_matrix(const vector<Edge> &edges, vector<vector<int>> &matrix);
+vector<int> get_permutations(int n, int index);
+vector<vector<int>> valid_paths(vector<vector<int>> &paths, vector<vector<int>> &matrix, int total_capacity, map<int, int> &node_order);
+int factorial(int n);
+vector<int> best_path(vector<vector<int>> &matrix, vector<vector<int>> &paths);
+double compute_cost(const vector<int> &path, const vector<vector<int>> &matrix);
 
 int main(int argc, char *argv[]) {
+
+    // START THE CHONOS CLOCK
+    auto start = chrono::high_resolution_clock::now();
+
     MPI_Init(&argc, &argv);
 
     int rank, size;
@@ -49,7 +73,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Broadcast the matrix to all processes
     for (int i = 0; i < num_nodes; i++) {
         MPI_Bcast(matrix[i].data(), num_nodes, MPI_INT, 0, MPI_COMM_WORLD);
     }
@@ -76,14 +99,25 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    vector<vector<int>> all_permutations(total_permutations, vector<int>(num_nodes));
-    for (int i = 0; i < local_size; i++) {
-        MPI_Gatherv(local_permutations[i].data(), num_nodes, MPI_INT, all_permutations[0].data(), recv_counts.data(), displs.data(), MPI_INT, 0, MPI_COMM_WORLD);
+    vector<int> all_permutations(total_permutations * num_nodes);
+    vector<int> local_permutations_flat;
+    for (const auto &perm : local_permutations) {
+        local_permutations_flat.insert(local_permutations_flat.end(), perm.begin(), perm.end());
+    }
+
+    MPI_Gatherv(local_permutations_flat.data(), local_size * num_nodes, MPI_INT,
+                all_permutations.data(), recv_counts.data(), displs.data(), MPI_INT, 0, MPI_COMM_WORLD);
+
+    vector<vector<int>> all_permutations_2d(total_permutations, vector<int>(num_nodes));
+    if (rank == 0) {
+        for (int i = 0; i < total_permutations; ++i) {
+            copy(all_permutations.begin() + i * num_nodes, all_permutations.begin() + (i + 1) * num_nodes, all_permutations_2d[i].begin());
+        }
     }
 
     vector<vector<int>> valid_routes;
     if (rank == 0) {
-        valid_routes = valid_paths(all_permutations, matrix, capacity, node_order);
+        valid_routes = valid_paths(all_permutations_2d, matrix, capacity, node_order);
     }
 
     // Broadcast the number of valid routes to all processes
@@ -115,6 +149,12 @@ int main(int argc, char *argv[]) {
     }
 
     MPI_Finalize();
+
+    // STOP THE CHRONOS CLOCK
+    auto end = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+    cout << "Time taken: " << duration.count() << " milliseconds" << endl;
+
     return 0;
 }
 

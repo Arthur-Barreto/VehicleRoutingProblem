@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
     vector<vector<int>> local_valid_paths = valid_paths(local_permutations, matrix, capacity, node_order, MPI_COMM_WORLD);
 
     // print the local valid paths and the rank
-    cout << "Rank: " << rank << endl;
+    cout << "better Rank: " << rank << endl;
     for (int i = 0; i < local_valid_paths.size(); i++) {
         cout << "Path " << i << ": ";
         for (int j = 0; j < local_valid_paths[i].size(); j++) {
@@ -151,6 +151,22 @@ int main(int argc, char *argv[]) {
         cout << local_best_path[i] << " ";
     }
     cout << endl;
+
+    // send the best path and the cost to the root process
+    vector<int> best_path_buffer(num_nodes);
+    vector<double> best_cost_buffer(1);
+    copy(local_best_path.begin(), local_best_path.end(), best_path_buffer.begin());
+    best_cost_buffer[0] = local_best_cost;
+
+    vector<int> recv_counts_best_path(size);
+    MPI_Gather(&num_nodes, 1, MPI_INT, recv_counts_best_path.data(), 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    vector<int> displs_best_path(size, 0);
+    int total_size_best_path = recv_counts_best_path[0];
+    for (int i = 1; i < size; i++) {
+        displs_best_path[i] = displs_best_path[i - 1] + recv_counts_best_path[i - 1];
+        total_size_best_path += recv_counts_best_path[i];
+    }
 
     // vector<int> best_route;
     // if (rank == 0) {

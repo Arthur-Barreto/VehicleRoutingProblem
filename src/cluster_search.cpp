@@ -19,7 +19,7 @@ void distribute_tasks(int num_tasks, int num_procs, int rank, int &start_task, i
 void read_graph(string filename, vector<Edge> *edges, map<int, int> *node_order);
 void generate_matrix(const vector<Edge> &edges, vector<vector<int>> &matrix);
 vector<int> get_permutations(int n, int index);
-vector<vector<int>> valid_paths(vector<vector<int>> &paths, vector<vector<int>> &matrix, int total_capacity, map<int, int> &node_order);
+vector<vector<int>> valid_paths(vector<vector<int>> &paths, vector<vector<int>> &matrix, int total_capacity, map<int, int> &node_order, MPI_Comm comm);
 int factorial(int n);
 vector<int> best_path(vector<vector<int>> &matrix, vector<vector<int>> &paths);
 double compute_cost(const vector<int> &path, const vector<vector<int>> &matrix);
@@ -87,15 +87,6 @@ int main(int argc, char *argv[]) {
         local_permutations.push_back(get_permutations(num_nodes - 1, i));
     }
 
-    // print the local permutations
-    for (int i = 0; i < local_permutations.size(); i++) {
-        cout << "Rank " << rank << " Permutation " << i << ": ";
-        for (int j = 0; j < local_permutations[i].size(); j++) {
-            cout << local_permutations[i][j] << " ";
-        }
-        cout << endl;
-    }
-
     // Flatten local permutations
     vector<int> local_permutations_flat;
     for (const auto &perm : local_permutations) {
@@ -107,15 +98,6 @@ int main(int argc, char *argv[]) {
     vector<int> recv_counts(size);
     MPI_Allgather(&local_size, 1, MPI_INT, recv_counts.data(), 1, MPI_INT, MPI_COMM_WORLD);
 
-    // print all recv_counts
-    if (rank == 0) {
-        cout << "Recv counts: ";
-        for (int i = 0; i < size; i++) {
-            cout << recv_counts[i] << " ";
-        }
-        cout << endl;
-    }
-
     vector<int> displs(size, 0);
     int total_size = recv_counts[0];
     for (int i = 1; i < size; i++) {
@@ -123,27 +105,9 @@ int main(int argc, char *argv[]) {
         total_size += recv_counts[i];
     }
 
-    // print all displs
-    if (rank == 0) {
-        cout << "Displs: ";
-        for (int i = 0; i < size; i++) {
-            cout << displs[i] << " ";
-        }
-        cout << endl;
-    }
-
     vector<int> all_permutations(total_size);
     MPI_Allgatherv(local_permutations_flat.data(), local_size, MPI_INT,
                    all_permutations.data(), recv_counts.data(), displs.data(), MPI_INT, MPI_COMM_WORLD);
-
-    // print all permutations
-    if (rank == 0) {
-        cout << "All Permutations: ";
-        for (int i = 0; i < all_permutations.size(); i++) {
-            cout << all_permutations[i] << " ";
-        }
-        cout << endl;
-    }
 
     vector<vector<int>> all_permutations_2d(total_permutations, vector<int>(local_permutations[0].size()));
     int offset = 0;
@@ -163,45 +127,53 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    vector<vector<int>> valid_routes;
-    if (rank == 0) {
-        valid_routes = valid_paths(all_permutations_2d, matrix, capacity, node_order);
-    }
+    // Calculate valid paths locally
+    vector<vector<int>> local_valid_paths = valid_paths(local_permutations, matrix, capacity, node_order, MPI_COMM_WORLD);
 
-    // Broadcast the number of valid routes to all processes
-    int num_valid_routes = valid_routes.size();
-    MPI_Bcast(&num_valid_routes, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-    if (rank != 0) {
-        valid_routes.resize(num_valid_routes, vector<int>(num_nodes));
-    }
-
-    // Broadcast valid routes to all processes
-    for (int i = 0; i < num_valid_routes; i++) {
-        MPI_Bcast(valid_routes[i].data(), num_nodes, MPI_INT, 0, MPI_COMM_WORLD);
-    }
-
-    vector<int> best_route;
-    if (rank == 0) {
-        best_route = best_path(matrix, valid_routes);
-
-        cout << "Best Route: ";
-        for (size_t i = 0; i < best_route.size(); i++) {
-            cout << best_route[i] << " ";
+    // print the local valid paths and the rank
+    cout << "Rank: " << rank << endl;
+    for (int i = 0; i < local_valid_paths.size(); i++) {
+        cout << "Path " << i << ": ";
+        for (int j = 0; j < local_valid_paths[i].size(); j++) {
+            cout << local_valid_paths[i][j] << " ";
         }
         cout << endl;
-
-        // Compute the cost of the best route
-        double cost = compute_cost(best_route, matrix);
-        cout << "Cost of the best route: " << cost << endl;
     }
+
+    // compute the best path locally
+    vector<int> local_best_path = best_path(matrix, local_valid_paths);
+    double local_best_cost = compute_cost(local_best_path, matrix);
+
+    // print the best local path and the rank
+    cout << "Rank: " << rank << endl;
+    cout << "Best Path: ";
+    for (int i = 0; i < local_best_path.size(); i++) {
+        cout << local_best_path[i] << " ";
+    }
+    cout << endl;
+
+    // vector<int> best_route;
+    // if (rank == 0) {
+    //     // Assuming all_valid_paths are gathered
+    //     best_route = best_path(matrix, all_valid_paths);
+
+    //     cout << "Best Route: ";
+    //     for (size_t i = 0; i < best_route.size(); i++) {
+    //         cout << best_route[i] << " ";
+    //     }
+    //     cout << endl;
+
+    //     // Compute the cost of the best route
+    //     double cost = compute_cost(best_route, matrix);
+    //     cout << "Cost of the best route: " << cost << endl;
+    // }
 
     MPI_Finalize();
 
-    // STOP THE CHONOS CLOCK
+    // STOP THE CHRONO CLOCK
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-    
+
     if (rank == 0) {
         cout << "Time taken: " << duration.count() << " milliseconds" << endl;
     }
@@ -337,7 +309,7 @@ vector<int> get_permutations(int n, int index) {
     return permutation;
 }
 
-vector<vector<int>> valid_paths(vector<vector<int>> &paths, vector<vector<int>> &matrix, int total_capacity, map<int, int> &node_order) {
+vector<vector<int>> valid_paths(vector<vector<int>> &paths, vector<vector<int>> &matrix, int total_capacity, map<int, int> &node_order, MPI_Comm comm) {
     vector<vector<int>> possible_paths;
     int n = paths.size();
 
@@ -354,19 +326,19 @@ vector<vector<int>> valid_paths(vector<vector<int>> &paths, vector<vector<int>> 
                 new_path.push_back(next_node);
                 total_capacity_used += node_order[next_node];
             } else {
-                if (new_path.back() != 0) { // Prevent consecutive zeros
-                    new_path.push_back(0);  // Return to depot to reset capacity
+                if (new_path.back() != 0) {
+                    new_path.push_back(0);
                 }
-                total_capacity_used = 0; // Reset capacity after returning to depot
+                total_capacity_used = 0;
 
-                if (matrix[0][next_node] != -1) { // If there is a path from depot to next_node
+                if (matrix[0][next_node] != -1) {
                     new_path.push_back(next_node);
                     total_capacity_used += node_order[next_node];
                 }
             }
         }
 
-        if (new_path.back() != 0) { // Avoid appending 0 if already at depot
+        if (new_path.back() != 0) {
             new_path.push_back(0);
         }
 

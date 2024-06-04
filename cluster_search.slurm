@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=express
+#SBATCH --partition=espec
 #SBATCH --nodes=2
 #SBATCH --cpus-per-task=5
 #SBATCH --mem=2G

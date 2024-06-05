@@ -54,8 +54,8 @@ int main(int argc, char *argv[]) {
         read_graph(graph_file, &edges, &node_order);
         num_nodes = node_order.size() + 1;
 
-        cout << "Number of edges: " << edges.size() << endl;
-        cout << "Number of nodes: " << num_nodes << endl;
+        // cout << "Number of edges: " << edges.size() << endl;
+        // cout << "Number of nodes: " << num_nodes << endl;
     }
 
     // Broadcast num_nodes to all processes
@@ -65,12 +65,12 @@ int main(int argc, char *argv[]) {
     if (rank == 0) {
         generate_matrix(edges, matrix);
 
-        for (int i = 0; i < num_nodes; i++) {
-            for (int j = 0; j < num_nodes; j++) {
-                cout << matrix[i][j] << " ";
-            }
-            cout << "\n";
-        }
+        // for (int i = 0; i < num_nodes; i++) {
+        //     for (int j = 0; j < num_nodes; j++) {
+        //         cout << matrix[i][j] << " ";
+        //     }
+        //     cout << "\n";
+        // }
     }
 
     for (int i = 0; i < num_nodes; i++) {
@@ -117,40 +117,40 @@ int main(int argc, char *argv[]) {
     }
 
     // print all permutations
-    if (rank == 0) {
-        for (int i = 0; i < all_permutations_2d.size(); i++) {
-            cout << "Permutation " << i << ": ";
-            for (int j = 0; j < all_permutations_2d[i].size(); j++) {
-                cout << all_permutations_2d[i][j] << " ";
-            }
-            cout << endl;
-        }
-    }
+    // if (rank == 0) {
+    //     for (int i = 0; i < all_permutations_2d.size(); i++) {
+    //         cout << "Permutation " << i << ": ";
+    //         for (int j = 0; j < all_permutations_2d[i].size(); j++) {
+    //             cout << all_permutations_2d[i][j] << " ";
+    //         }
+    //         cout << endl;
+    //     }
+    // }
 
     // Calculate valid paths locally
     vector<vector<int>> local_valid_paths = valid_paths(local_permutations, matrix, capacity, node_order, MPI_COMM_WORLD);
 
     // print the local valid paths and the rank
-    cout << "better Rank: " << rank << endl;
-    for (int i = 0; i < local_valid_paths.size(); i++) {
-        cout << "Path " << i << ": ";
-        for (int j = 0; j < local_valid_paths[i].size(); j++) {
-            cout << local_valid_paths[i][j] << " ";
-        }
-        cout << endl;
-    }
+    // cout << "better Rank: " << rank << endl;
+    // for (int i = 0; i < local_valid_paths.size(); i++) {
+    //     cout << "Path " << i << ": ";
+    //     for (int j = 0; j < local_valid_paths[i].size(); j++) {
+    //         cout << local_valid_paths[i][j] << " ";
+    //     }
+    //     cout << endl;
+    // }
 
     // compute the best path locally
     vector<int> local_best_path = best_path(matrix, local_valid_paths);
     double local_best_cost = compute_cost(local_best_path, matrix);
 
     // print the best local path and the rank
-    cout << "Rank: " << rank << endl;
-    cout << "Best Path: ";
-    for (int i = 0; i < local_best_path.size(); i++) {
-        cout << local_best_path[i] << " ";
-    }
-    cout << endl;
+    // cout << "Rank: " << rank << endl;
+    // cout << "Best Path: ";
+    // for (int i = 0; i < local_best_path.size(); i++) {
+    //     cout << local_best_path[i] << " ";
+    // }
+    // cout << endl;
 
     // Gather all costs at the root process
     vector<double> all_costs(size);
@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
     int min_cost_index = 0;
     if (rank == 0) {
         min_cost_index = min_element(all_costs.begin(), all_costs.end()) - all_costs.begin();
-        cout << "Process " << min_cost_index << " has the minimum cost: " << all_costs[min_cost_index] << endl;
+        // cout << "Process " << min_cost_index << " has the minimum cost: " << all_costs[min_cost_index] << endl;
     }
 
     // Broadcast the index of the process with the minimum cost

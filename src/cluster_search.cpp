@@ -152,37 +152,42 @@ int main(int argc, char *argv[]) {
     }
     cout << endl;
 
-    // send the best path and the cost to the root process
-    vector<int> best_path_buffer(num_nodes);
-    vector<double> best_cost_buffer(1);
-    copy(local_best_path.begin(), local_best_path.end(), best_path_buffer.begin());
-    best_cost_buffer[0] = local_best_cost;
+    // Gather all costs at the root process
+    vector<double> all_costs(size);
+    MPI_Gather(&local_best_cost, 1, MPI_DOUBLE, all_costs.data(), 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-    vector<int> recv_counts_best_path(size);
-    MPI_Gather(&num_nodes, 1, MPI_INT, recv_counts_best_path.data(), 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-    vector<int> displs_best_path(size, 0);
-    int total_size_best_path = recv_counts_best_path[0];
-    for (int i = 1; i < size; i++) {
-        displs_best_path[i] = displs_best_path[i - 1] + recv_counts_best_path[i - 1];
-        total_size_best_path += recv_counts_best_path[i];
+    // If rank 0, determine the process with the minimum cost
+    int min_cost_index = 0;
+    if (rank == 0) {
+        min_cost_index = min_element(all_costs.begin(), all_costs.end()) - all_costs.begin();
+        cout << "Process " << min_cost_index << " has the minimum cost: " << all_costs[min_cost_index] << endl;
     }
 
-    // vector<int> best_route;
-    // if (rank == 0) {
-    //     // Assuming all_valid_paths are gathered
-    //     best_route = best_path(matrix, all_valid_paths);
+    // Broadcast the index of the process with the minimum cost
+    MPI_Bcast(&min_cost_index, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    //     cout << "Best Route: ";
-    //     for (size_t i = 0; i < best_route.size(); i++) {
-    //         cout << best_route[i] << " ";
-    //     }
-    //     cout << endl;
+    // Gather the best path from the process with the minimum cost
+    vector<int> global_best_path;
+    if (rank == min_cost_index) {
+        // Send the size of the path first
+        int path_size = local_best_path.size();
+        MPI_Send(&path_size, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        MPI_Send(local_best_path.data(), path_size, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    }
 
-    //     // Compute the cost of the best route
-    //     double cost = compute_cost(best_route, matrix);
-    //     cout << "Cost of the best route: " << cost << endl;
-    // }
+    if (rank == 0) {
+        int path_size;
+        MPI_Recv(&path_size, 1, MPI_INT, min_cost_index, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        global_best_path.resize(path_size);
+        MPI_Recv(global_best_path.data(), path_size, MPI_INT, min_cost_index, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        // Print the global best path
+        cout << "Global Best Path from Process " << min_cost_index << ": ";
+        for (int i = 0; i < global_best_path.size(); i++) {
+            cout << global_best_path[i] << " ";
+        }
+        cout << endl;
+    }
 
     MPI_Finalize();
 

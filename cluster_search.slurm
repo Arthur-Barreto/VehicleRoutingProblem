@@ -3,6 +3,6 @@
 #SBATCH --nodes=2
 #SBATCH --cpus-per-task=5
 #SBATCH --mem=2G
-#SBATCH --output=4_stores.out
+#SBATCH --output=cluster_log/12_stores.out
 
-mpirun ./cluster_search input_files/grafo4.txt 15
+mpirun ./cluster_search input_files/grafo12.txt 15

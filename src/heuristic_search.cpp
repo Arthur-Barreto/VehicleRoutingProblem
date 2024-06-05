@@ -34,6 +34,8 @@ int main(int argc, char *argv[]) {
     vector<vector<int>> routes;
 
     int total_permutations = factorial(num_nodes - 1);
+    // compute only total permutation/8 or 2, whichever is greater
+    total_permutations = max(total_permutations / 8, 2);
 
     for (int i = 1; i <= total_permutations; i++) {
         vector<int> paths = get_permutations(num_nodes - 1, i);

@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
     int min_cost_index = 0;
     if (rank == 0) {
         min_cost_index = min_element(all_costs.begin(), all_costs.end()) - all_costs.begin();
-        cout << "Process " << min_cost_index << " has the minimum cost: " << all_costs[min_cost_index] << endl;
+        // cout << "Process " << min_cost_index << " has the minimum cost: " << all_costs[min_cost_index] << endl;
     }
 
     // Broadcast the index of the process with the minimum cost
